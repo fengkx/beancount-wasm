@@ -8,8 +8,8 @@
     "preview": "rsbuild preview"
   },
   "dependencies": {
-    "async-call-rpc": "^2.0.0",
-    "beancount-wasm": "file:../package"
+    "async-call-rpc": "^6.4.2",
+    "beancount-wasm": "workspace:*"
   },
   "devDependencies": {
     "@rsbuild/core": "^0.6.0"

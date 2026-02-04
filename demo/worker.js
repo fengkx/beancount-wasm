@@ -1,5 +1,6 @@
-import { AsyncCall } from "async-call-rpc";
-import { installBeancount } from "beancount-wasm";
+import { AsyncCall } from "async-call-rpc/base";
+import { WorkerChannel } from "async-call-rpc/utils/web/worker.js";
+import { installBeancount } from "beancount-wasm/runtime";
 
 const PYODIDE_VERSION = "v0.25.1";
 const PYODIDE_BASE = `https://cdn.jsdelivr.net/pyodide/${PYODIDE_VERSION}/full/`;
@@ -7,11 +8,14 @@ const PYODIDE_BASE = `https://cdn.jsdelivr.net/pyodide/${PYODIDE_VERSION}/full/`
 const pyodideByVersion = new Map();
 const fileCacheByVersion = new Map();
 
-const mainApi = AsyncCall(self, {
-  methods: {
+const mainApi = AsyncCall(
+  {
     runBeancheck,
   },
-});
+  {
+    channel: new WorkerChannel(),
+  },
+);
 
 function postStatus(message) {
   void mainApi.reportStatus(message);
@@ -24,11 +28,14 @@ async function getPyodide(version) {
 
   const promise = (async () => {
     postStatus(`Loading Pyodide (${version})...`);
-    const { loadPyodide } = await import(`${PYODIDE_BASE}pyodide.mjs`);
+    const { loadPyodide } = await import(
+      /* webpackIgnore: true */
+      `${PYODIDE_BASE}pyodide.mjs`,
+    );
     const pyodide = await loadPyodide({ indexURL: PYODIDE_BASE });
 
     postStatus(`Installing Beancount ${version}...`);
-    await installBeancount(pyodide, { version });
+    await installBeancount(pyodide, { version, inline: "only" });
 
     postStatus(`Ready (${version})`);
     return pyodide;

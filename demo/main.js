@@ -1,4 +1,5 @@
-import { AsyncCall } from "async-call-rpc";
+import { AsyncCall } from "async-call-rpc/base";
+import { WorkerChannel } from "async-call-rpc/utils/web/worker.js";
 
 const statusEl = document.getElementById("status");
 const outputEl = document.getElementById("output");
@@ -195,14 +196,17 @@ function initWorker() {
   worker = new Worker(new URL("./worker.js", import.meta.url), {
     type: "module",
   });
-  workerApi = AsyncCall(worker, {
-    methods: {
+  workerApi = AsyncCall(
+    {
       reportStatus: (message) => setStatus(message),
       reportReady: () => {
         workerReady = true;
       },
     },
-  });
+    {
+      channel: new WorkerChannel(worker),
+    },
+  );
 }
 
 async function runBeancheck() {
