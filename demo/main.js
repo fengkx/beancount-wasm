@@ -1,4 +1,4 @@
-import { installBeancount } from "../package/index.js";
+import { AsyncCall } from "async-call-rpc";
 
 const statusEl = document.getElementById("status");
 const outputEl = document.getElementById("output");
@@ -9,9 +9,6 @@ const fileListEl = document.getElementById("file-list");
 const entrySelect = document.getElementById("entry-file");
 const editorContainer = document.getElementById("editor");
 const versionSelect = document.getElementById("version");
-
-const PYODIDE_VERSION = "v0.25.1";
-const PYODIDE_BASE = `https://cdn.jsdelivr.net/pyodide/${PYODIDE_VERSION}/full/`;
 
 const MONACO_VERSION = "0.45.0";
 const MONACO_BASE = `https://cdn.jsdelivr.net/npm/monaco-editor@${MONACO_VERSION}/min/vs`;
@@ -44,7 +41,9 @@ let monacoApi = null;
 let editor = null;
 let activeFile = null;
 const files = new Map();
-const pyodideByVersion = new Map();
+let worker = null;
+let workerReady = false;
+let workerApi = null;
 
 function setStatus(text) {
   statusEl.textContent = text;
@@ -192,72 +191,18 @@ async function initEditor() {
   deleteFileBtn.disabled = false;
 }
 
-async function getPyodide(version) {
-  if (pyodideByVersion.has(version)) {
-    return pyodideByVersion.get(version);
-  }
-
-  const promise = (async () => {
-    setStatus(`Loading Pyodide (${version})...`);
-    const { loadPyodide } = await import(`${PYODIDE_BASE}pyodide.mjs`);
-    const pyodide = await loadPyodide({ indexURL: PYODIDE_BASE });
-
-    setStatus(`Installing Beancount ${version}...`);
-    await installBeancount(pyodide, { version });
-
-    setStatus(`Ready (${version})`);
-    return pyodide;
-  })().catch((err) => {
-    setStatus(`Init failed (${version}): ${err}`);
-    throw err;
+function initWorker() {
+  worker = new Worker(new URL("./worker.js", import.meta.url), {
+    type: "module",
   });
-
-  pyodideByVersion.set(version, promise);
-  return promise;
-}
-
-function mkdirp(fs, dir) {
-  const parts = dir.split("/").filter(Boolean);
-  let current = "";
-  for (const part of parts) {
-    current += `/${part}`;
-    if (!fs.analyzePath(current).exists) {
-      fs.mkdir(current);
-    }
-  }
-}
-
-function rmrf(fs, target) {
-  const stat = fs.stat(target);
-  if (fs.isDir(stat.mode)) {
-    for (const entry of fs.readdir(target)) {
-      if (entry === "." || entry === "..") continue;
-      rmrf(fs, `${target}/${entry}`);
-    }
-    fs.rmdir(target);
-  } else {
-    fs.unlink(target);
-  }
-}
-
-function resetWorkdir(pyodide, root) {
-  const fs = pyodide.FS;
-  const existing = fs.analyzePath(root).exists;
-  if (existing) {
-    rmrf(fs, root);
-  }
-  fs.mkdir(root);
-}
-
-function syncFiles(pyodide, root) {
-  resetWorkdir(pyodide, root);
-  const fs = pyodide.FS;
-  for (const [name, model] of files.entries()) {
-    const fullPath = `${root}/${name}`;
-    const dir = fullPath.slice(0, fullPath.lastIndexOf("/"));
-    mkdirp(fs, dir);
-    fs.writeFile(fullPath, model.getValue());
-  }
+  workerApi = AsyncCall(worker, {
+    methods: {
+      reportStatus: (message) => setStatus(message),
+      reportReady: () => {
+        workerReady = true;
+      },
+    },
+  });
 }
 
 async function runBeancheck() {
@@ -265,43 +210,26 @@ async function runBeancheck() {
   runBtn.disabled = true;
 
   try {
+    if (!workerReady) {
+      setStatus("Worker not ready yet...");
+      runBtn.disabled = false;
+      return;
+    }
     const version = versionSelect.value;
-    const pyodide = await getPyodide(version);
     const entryFile = entrySelect.value;
     if (!entryFile || !files.has(entryFile)) {
       throw new Error("Entry file is missing.");
     }
 
-    setStatus(`Syncing files (${version})...`);
-    const root = `/work-${version}`;
-    syncFiles(pyodide, root);
-
-    const entryPath = `${root}/${entryFile}`;
-    pyodide.globals.set("entry_path", entryPath);
-
-    setStatus(`Running beancount loader (${version})...`);
-    const result = await pyodide.runPythonAsync(`
-from beancount import loader
-import json
-
-entries, errors, options = loader.load_file(entry_path)
-
-err_list = [
-  {
-    'file': e.source.get('filename'),
-    'line': e.source.get('lineno'),
-    'message': e.message,
-  }
-  for e in errors
-]
-
-json.dumps({
-  'errors': err_list,
-  'entries': len(entries),
-  'includes': options.get('include', []),
-})
-`);
-
+    const payloadFiles = Array.from(files.entries()).map(([name, model]) => ({
+      name,
+      content: model.getValue(),
+    }));
+    const result = await workerApi.runBeancheck({
+      version,
+      entryFile,
+      files: payloadFiles,
+    });
     outputEl.textContent = result;
     setStatus(`Done (${version})`);
   } catch (err) {
@@ -329,6 +257,8 @@ entrySelect.addEventListener("change", () => {
     setActiveFile(entrySelect.value);
   }
 });
+
+initWorker();
 
 void initEditor().catch((err) => {
   setStatus(`Editor init failed: ${err}`);

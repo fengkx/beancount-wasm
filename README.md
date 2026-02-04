@@ -29,13 +29,16 @@ This writes wheels into:
 
 ## Run demo
 
-From the repo root:
+The demo now consumes the local npm package via a `file:` dependency and is
+built with Rsbuild for an end-to-end exercise of the wrapper.
 
 ```sh
-python3 -m http.server 8080
+cd demo
+npm install
+npm run dev
 ```
 
-Then open `http://localhost:8080/demo/` in your browser.
+Then open the local dev server URL printed by Rsbuild.
 
 ## Package
 
