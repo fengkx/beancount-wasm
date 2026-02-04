@@ -5,7 +5,8 @@
   "type": "module",
   "license": "GPL-2.0-only",
   "scripts": {
-    "build": "tsdown"
+    "build": "tsdown",
+    "prepublishOnly": "pnpm build"
   },
   "exports": {
     "./runtime": {
