@@ -29,13 +29,12 @@ This writes wheels into:
 
 ## Run demo
 
-The demo now consumes the local npm package via a `file:` dependency and is
-built with Rsbuild for an end-to-end exercise of the wrapper.
+The demo consumes the local package via a workspace dependency and is built
+with Rsbuild for an end-to-end exercise of the wrapper.
 
 ```sh
-cd demo
-npm install
-npm run dev
+pnpm install
+pnpm run dev:demo
 ```
 
 Then open the local dev server URL printed by Rsbuild.
@@ -45,6 +44,6 @@ Then open the local dev server URL printed by Rsbuild.
 The npm package lives in `package/`:
 
 ```sh
-cd package
-npm pack
+pnpm run build:package
+pnpm -C package pack
 ```
