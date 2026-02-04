@@ -1,4 +1,4 @@
-import { installBeancount } from "../package/index.js";
+import { installBeancount } from "beancount-wasm";
 
 const statusEl = document.getElementById("status");
 const outputEl = document.getElementById("output");

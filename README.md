@@ -32,10 +32,12 @@ This writes wheels into:
 From the repo root:
 
 ```sh
-python3 -m http.server 8080
+cd demo
+npm install
+npm run dev
 ```
 
-Then open `http://localhost:8080/demo/` in your browser.
+Open the URL printed by Rsbuild to view the demo.
 
 ## Package
 
