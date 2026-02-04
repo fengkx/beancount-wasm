@@ -4,11 +4,34 @@
   "description": "Pyodide-compatible Beancount wheels (v2/v3) and a small installer wrapper",
   "type": "module",
   "license": "GPL-2.0-only",
+  "scripts": {
+    "build": "tsdown"
+  },
   "exports": {
-    ".": "./index.js"
+    "./runtime": {
+      "types": "./dist/runtime.d.ts",
+      "import": "./dist/runtime.js"
+    },
+    "./v2": {
+      "types": "./dist/v2.d.ts",
+      "import": "./dist/v2.js"
+    },
+    "./v3": {
+      "types": "./dist/v3.d.ts",
+      "import": "./dist/v3.js"
+    },
+    "./inline/v2": {
+      "types": "./dist/inline/v2.d.ts",
+      "import": "./dist/inline/v2.js"
+    },
+    "./inline/v3": {
+      "types": "./dist/inline/v3.d.ts",
+      "import": "./dist/inline/v3.js"
+    },
+    "./package.json": "./package.json"
   },
   "files": [
-    "index.js",
+    "dist/",
     "wheels/",
     "README.md"
   ],
@@ -17,5 +40,9 @@
     "pyodide",
     "wasm",
     "webassembly"
-  ]
+  ],
+  "devDependencies": {
+    "tsdown": "^0.20.1",
+    "typescript": "^5.9.3"
+  }
 }

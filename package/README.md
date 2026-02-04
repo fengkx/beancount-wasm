@@ -6,11 +6,15 @@ wrapper to install them into a Pyodide runtime.
 ## Usage
 
 ```js
-import { loadPyodide } from "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.mjs";
-import { installBeancount } from "beancount-wasm";
+import { createBeancountRuntime } from "beancount-wasm/runtime";
 
-const pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/" });
-await installBeancount(pyodide, { version: "v3" });
+const { pyodide } = await createBeancountRuntime({
+  version: "v3",
+  // Optional: override the base URL for Pyodide assets.
+  // The base URL must contain pyodide.mjs and follow the same layout as
+  // https://cdn.jsdelivr.net/pyodide/v0.25.1/full/
+  // pyodideBaseUrl: "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/",
+});
 
 const result = await pyodide.runPythonAsync(`
 from beancount import loader
@@ -22,11 +26,35 @@ console.log(result);
 
 ## API
 
+### `createBeancountRuntime(options)`
+Loads Pyodide and installs Beancount in one step.
+
+Options:
+- `version`: `"v2"` or `"v3"` (aliases: `"2"`, `"3"`, default: `"v3"`)
+- `pyodideBaseUrl`: base URL for Pyodide assets (defaults to jsDelivr)
+- `wheelBaseUrl`: base URL for wheels (defaults to jsDelivr npm CDN)
+- `deps`: override Beancount dependency installation
+- `inline`: `"auto" | "prefer" | "only" | "off"` (default: `"auto"`)
+  - `auto`: try URL first, fallback to inline on failure
+  - `prefer`: try inline first, fallback to URL
+  - `only`: inline only
+  - `off`: URL only
+- `onStatus`: optional status callback
+
+Example forcing inline-only mode:
+
+```js
+import { createBeancountRuntime } from "beancount-wasm/runtime";
+
+const { pyodide } = await createBeancountRuntime({
+  version: "v2",
+  inline: "only",
+});
+```
+
 ### `installBeancount(pyodide, options)`
-- `version`: `"v2"` or `"v3"` (default: `"v3"`)
-- `wheelBaseUrl`: optional base URL for wheels. Use this if you host wheels
-  somewhere other than alongside the package.
-- `deps`: optional boolean to override the default dependency handling.
+Installs Beancount into an existing Pyodide runtime.
+Uses the same options as `createBeancountRuntime` (minus `pyodideBaseUrl`).
 
 ### `resolveWheelUrl({ version, wheelBaseUrl })`
 Returns the URL used for the selected wheel.
@@ -37,5 +65,22 @@ Returns `{ version, filename, deps }` for the selected Beancount version.
 ## Wheel assets
 
 The wheels live under `wheels/v2/` and `wheels/v3/` within the package. When
-serving in the browser, these files must be available over HTTP (for example,
-by exposing `node_modules/beancount-wasm/` as static assets).
+serving in the browser, these files must be available over HTTP unless you rely
+on the built-in inline fallback (`inline: "auto"`).
+
+## Exports
+
+This package exposes subpath exports only:
+- `beancount-wasm/runtime`
+- `beancount-wasm/v2`
+- `beancount-wasm/v3`
+- `beancount-wasm/inline/v2`
+- `beancount-wasm/inline/v3`
+
+Version-specific entry example:
+
+```js
+import { createBeancountRuntime } from "beancount-wasm/v3";
+
+const { pyodide } = await createBeancountRuntime();
+```
