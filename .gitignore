@@ -10,6 +10,7 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
 # Python / build
 __pycache__/
@@ -23,6 +24,8 @@ __pycache__/
 # Build artifacts (do not ignore package/wheels/*)
 /dist/
 /build/
+/package/dist/
+/demo/dist/
 /.pyodide-xbuildenv/
 /.mesonpy-*/
 

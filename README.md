@@ -29,19 +29,21 @@ This writes wheels into:
 
 ## Run demo
 
-From the repo root:
+The demo consumes the local package via a workspace dependency and is built
+with Rsbuild for an end-to-end exercise of the wrapper.
 
 ```sh
-python3 -m http.server 8080
+pnpm install
+pnpm run dev:demo
 ```
 
-Then open `http://localhost:8080/demo/` in your browser.
+Then open the local dev server URL printed by Rsbuild.
 
 ## Package
 
 The npm package lives in `package/`:
 
 ```sh
-cd package
-npm pack
+pnpm run build:package
+pnpm -C package pack
 ```

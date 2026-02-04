@@ -1,0 +1,17 @@
+{
+  "name": "beancount-wasm-workspace",
+  "private": true,
+  "packageManager": "pnpm@10.28.2",
+  "workspaces": [
+    "package",
+    "demo"
+  ],
+  "scripts": {
+    "install:all": "pnpm install",
+    "build:package": "pnpm -C package build",
+    "build:demo": "pnpm -C demo build",
+    "build:all": "pnpm -C package build && pnpm -C demo build",
+    "dev:demo": "pnpm -C demo dev",
+    "preview:demo": "pnpm -C demo preview"
+  }
+}
