@@ -1,0 +1,8 @@
+[submodule "deps/beancount-v2"]
+	path = deps/beancount-v2
+	url = https://github.com/fengkx/beancount.git
+	branch = v2-wasm
+[submodule "deps/beancount-v3"]
+	path = deps/beancount-v3
+	url = https://github.com/fengkx/beancount.git
+	branch = v3-wasm

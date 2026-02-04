@@ -1,0 +1,36 @@
+# OS / editor
+.DS_Store
+*.swp
+*.swo
+*.tmp
+
+# Node
+node_modules/
+*.tgz
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python / build
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.venv/
+
+# Build artifacts (do not ignore package/wheels/*)
+/dist/
+/build/
+/.pyodide-xbuildenv/
+/.mesonpy-*/
+
+# Submodule build outputs
+/deps/*/dist/
+/deps/*/build/
+/deps/*/.pyodide-xbuildenv/
+/deps/*/.mesonpy-*/
+
+# Tooling caches
+/.cache/
