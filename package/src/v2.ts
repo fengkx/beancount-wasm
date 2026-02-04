@@ -17,6 +17,7 @@ export const createBeancountRuntime = (options: V2RuntimeOptions = {}) =>
   createRuntime({ ...options, version: "v2" });
 
 export {
+  createFileTree,
   DEFAULT_PYODIDE_BASE_URL,
   DEFAULT_WHEEL_BASE_URL,
   VERSIONS,
@@ -26,6 +27,10 @@ export {
 export type {
   BeancountVersion,
   CreateRuntimeOptions,
+  FileContent,
+  FileEntry,
+  FileTree,
+  FileTreeOptions,
   InlineMode,
   InstallOptions,
   InstallResult,

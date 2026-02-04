@@ -56,6 +56,26 @@ const { pyodide } = await createBeancountRuntime({
 Installs Beancount into an existing Pyodide runtime.
 Uses the same options as `createBeancountRuntime` (minus `pyodideBaseUrl`).
 
+### `createFileTree(pyodide, { root, cache })`
+Creates a file tree helper for the Pyodide FS. Each file entry is
+`{ name, content }` where `name` is relative to `root`.
+
+The returned helper exposes:
+- `update(files)`: incremental writes for new/changed files
+- `remove(names)`: delete files by name
+- `reset(files)`: replace the tree to match the provided list
+
+Example:
+
+```js
+import { createFileTree } from "beancount-wasm/runtime";
+
+const fileTree = createFileTree(pyodide, { root: "/work" });
+fileTree.update([{ name: "main.bean", content: "2024-01-01 open Assets:Cash" }]);
+fileTree.remove(["old.bean"]);
+fileTree.reset([{ name: "main.bean", content: "..." }]);
+```
+
 ### `resolveWheelUrl({ version, wheelBaseUrl })`
 Returns the URL used for the selected wheel.
 

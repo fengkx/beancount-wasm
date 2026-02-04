@@ -43,6 +43,26 @@ export type CreateRuntimeOptions = InstallOptions & {
   pyodideBaseUrl?: string;
 };
 
+export type FileContent = string | Uint8Array;
+
+export type FileEntry = {
+  name: string;
+  content: FileContent;
+};
+
+export type FileTreeOptions = {
+  root: string;
+  cache?: Map<string, FileContent>;
+};
+
+export type FileTree = {
+  root: string;
+  cache: Map<string, FileContent>;
+  update: (files: FileEntry[]) => void;
+  remove: (names: string[]) => void;
+  reset: (files: FileEntry[]) => void;
+};
+
 const INLINE_DEFAULT: InlineMode = "auto";
 
 function getInstallOrder(mode: InlineMode): Array<"url" | "inline"> {
@@ -68,6 +88,15 @@ function ensureDir(fs: any, dir: string) {
       fs.mkdir(current);
     }
   }
+}
+
+function normalizeFileName(name: string) {
+  return name.replace(/^\/+/, "");
+}
+
+function resolveFilePath(root: string, name: string) {
+  const normalized = normalizeFileName(name);
+  return normalized ? `${root}/${normalized}` : root;
 }
 
 function writeInlineWheel(pyodide: any, filename: string, bytes: Uint8Array) {
@@ -174,4 +203,100 @@ export async function createBeancountRuntime(
     onStatus,
   });
   return { pyodide, installResult, version: installResult.version };
+}
+
+export function createFileTree(pyodide: any, options: FileTreeOptions): FileTree {
+  if (!pyodide) {
+    throw new Error("createFileTree: pyodide instance is required");
+  }
+
+  const { root, cache = new Map<string, FileContent>() } = options;
+
+  const update = (files: FileEntry[]) => {
+    const fs = pyodide.FS;
+    ensureDir(fs, root);
+
+    for (const file of files) {
+      const name = normalizeFileName(file.name);
+      if (!name) {
+        continue;
+      }
+      const prev = cache.get(name);
+      if (prev === file.content) {
+        continue;
+      }
+      const fullPath = resolveFilePath(root, name);
+      const dir = fullPath.slice(0, fullPath.lastIndexOf("/"));
+      ensureDir(fs, dir);
+      fs.writeFile(fullPath, file.content);
+      cache.set(name, file.content);
+    }
+  };
+
+  const remove = (names: string[]) => {
+    const fs = pyodide.FS;
+    if (!fs.analyzePath(root).exists) {
+      for (const name of names) {
+        cache.delete(normalizeFileName(name));
+      }
+      return;
+    }
+
+    for (const rawName of names) {
+      const name = normalizeFileName(rawName);
+      if (!name) {
+        continue;
+      }
+      const fullPath = resolveFilePath(root, name);
+      if (fs.analyzePath(fullPath).exists) {
+        fs.unlink(fullPath);
+      }
+      cache.delete(name);
+    }
+  };
+
+  const reset = (files: FileEntry[]) => {
+    const fs = pyodide.FS;
+    ensureDir(fs, root);
+    const nextCache = new Map<string, FileContent>();
+
+    for (const file of files) {
+      const name = normalizeFileName(file.name);
+      if (!name) {
+        continue;
+      }
+      nextCache.set(name, file.content);
+      const prev = cache.get(name);
+      if (prev === file.content) {
+        continue;
+      }
+      const fullPath = resolveFilePath(root, name);
+      const dir = fullPath.slice(0, fullPath.lastIndexOf("/"));
+      ensureDir(fs, dir);
+      fs.writeFile(fullPath, file.content);
+    }
+
+    for (const name of cache.keys()) {
+      if (nextCache.has(name)) {
+        continue;
+      }
+      const fullPath = resolveFilePath(root, name);
+      if (fs.analyzePath(fullPath).exists) {
+        fs.unlink(fullPath);
+      }
+    }
+
+    cache.clear();
+    for (const [name, content] of nextCache.entries()) {
+      cache.set(name, content);
+    }
+  };
+
+  return {
+    root,
+    cache,
+    update,
+    remove,
+    reset,
+  };
 }

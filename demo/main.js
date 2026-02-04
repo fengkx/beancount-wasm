@@ -45,6 +45,7 @@ const files = new Map();
 let worker = null;
 let workerReady = false;
 let workerApi = null;
+const fileCacheByVersion = new Map();
 
 function setStatus(text) {
   statusEl.textContent = text;
@@ -209,6 +210,33 @@ function initWorker() {
   );
 }
 
+function getFileCache(version) {
+  let cache = fileCacheByVersion.get(version);
+  if (!cache) {
+    cache = new Map();
+    fileCacheByVersion.set(version, cache);
+  }
+  return cache;
+}
+
+function buildIncrementalPayload(version) {
+  const cache = getFileCache(version);
+  const updates = [];
+  for (const [name, model] of files.entries()) {
+    const content = model.getValue();
+    if (cache.get(name) !== content) {
+      updates.push({ name, content });
+    }
+  }
+  const removed = [];
+  for (const name of cache.keys()) {
+    if (!files.has(name)) {
+      removed.push(name);
+    }
+  }
+  return { cache, updates, removed };
+}
+
 async function runBeancheck() {
   outputEl.textContent = "";
   runBtn.disabled = true;
@@ -225,17 +253,21 @@ async function runBeancheck() {
       throw new Error("Entry file is missing.");
     }
 
-    const payloadFiles = Array.from(files.entries()).map(([name, model]) => ({
-      name,
-      content: model.getValue(),
-    }));
+    const { cache, updates, removed } = buildIncrementalPayload(version);
     const result = await workerApi.runBeancheck({
       version,
       entryFile,
-      files: payloadFiles,
+      updates,
+      removed,
     });
     outputEl.textContent = result;
     setStatus(`Done (${version})`);
+    for (const file of updates) {
+      cache.set(file.name, file.content);
+    }
+    for (const name of removed) {
+      cache.delete(name);
+    }
   } catch (err) {
     outputEl.textContent = String(err);
     setStatus("Failed");
