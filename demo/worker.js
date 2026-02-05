@@ -7,6 +7,7 @@ const PYODIDE_BASE = `https://cdn.jsdelivr.net/pyodide/${PYODIDE_VERSION}/full/`
 
 const pyodideByVersion = new Map();
 const fileTreeByVersion = new Map();
+const EXTRA_PYTHON_PACKAGES = ["fava-plugins"];
 
 const mainApi = AsyncCall(
   {
@@ -35,7 +36,11 @@ async function getPyodide(version) {
     const pyodide = await loadPyodide({ indexURL: PYODIDE_BASE });
 
     postStatus(`Installing Beancount ${version}...`);
-    await installBeancount(pyodide, { version, inline: "only" });
+    await installBeancount(pyodide, {
+      version,
+      inline: "only",
+      pythonPackages: EXTRA_PYTHON_PACKAGES,
+    });
 
     postStatus(`Ready (${version})`);
     return pyodide;
