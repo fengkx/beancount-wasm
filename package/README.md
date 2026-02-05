@@ -34,6 +34,7 @@ Options:
 - `pyodideBaseUrl`: base URL for Pyodide assets (defaults to jsDelivr)
 - `wheelBaseUrl`: base URL for wheels (defaults to jsDelivr npm CDN)
 - `deps`: override Beancount dependency installation
+- `pythonPackages`: extra Python packages to install via `micropip` after Beancount
 - `inline`: `"auto" | "prefer" | "only" | "off"` (default: `"auto"`)
   - `auto`: try URL first, fallback to inline on failure
   - `prefer`: try inline first, fallback to URL
