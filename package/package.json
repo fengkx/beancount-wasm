@@ -48,6 +48,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fengkx/beancount-wasm.git"
+    "url": "git+https://github.com/fengkx/beancount-wasm.git",
+    "directory": "package"
   }
 }
