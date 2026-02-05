@@ -1,5 +1,6 @@
 import { loadInlineWheelBytes } from "./internal/inline.js";
 import { loadPyodideFromBase } from "./internal/pyodide.js";
+import type { PyodideFS, PyodideRuntime } from "./internal/pyodide-types.js";
 import {
   DEFAULT_PYODIDE_BASE_URL,
   DEFAULT_WHEEL_BASE_URL,
@@ -24,11 +25,14 @@ export type { BeancountVersion, BeancountVersionInput };
 
 export type InlineMode = "auto" | "prefer" | "only" | "off";
 
+export type { PyodideRuntime };
+
 export type InstallOptions = {
   version?: BeancountVersionInput;
   wheelBaseUrl?: string | URL;
   deps?: boolean;
   inline?: InlineMode;
+  pythonPackages?: string[];
   onStatus?: (message: string) => void;
 };
 
@@ -79,7 +83,7 @@ function getInstallOrder(mode: InlineMode): Array<"url" | "inline"> {
   }
 }
 
-function ensureDir(fs: any, dir: string) {
+function ensureDir(fs: PyodideFS, dir: string) {
   const parts = dir.split("/").filter(Boolean);
   let current = "";
   for (const part of parts) {
@@ -99,7 +103,11 @@ function resolveFilePath(root: string, name: string) {
   return normalized ? `${root}/${normalized}` : root;
 }
 
-function writeInlineWheel(pyodide: any, filename: string, bytes: Uint8Array) {
+function writeInlineWheel(
+  pyodide: PyodideRuntime,
+  filename: string,
+  bytes: Uint8Array,
+) {
   const fs = pyodide.FS;
   const baseDir = "/tmp/beancount-wasm";
   ensureDir(fs, baseDir);
@@ -109,7 +117,7 @@ function writeInlineWheel(pyodide: any, filename: string, bytes: Uint8Array) {
 }
 
 async function installWheel(
-  pyodide: any,
+  pyodide: PyodideRuntime,
   wheelUrl: string,
   installDeps: boolean,
 ) {
@@ -131,8 +139,30 @@ await micropip.install(wheel_url, deps=install_deps)
   }
 }
 
+async function installPythonPackages(
+  pyodide: PyodideRuntime,
+  pythonPackages: string[] | undefined,
+  onStatus?: (message: string) => void,
+) {
+  if (!pythonPackages?.length) {
+    return;
+  }
+  onStatus?.(`Installing Python packages: ${pythonPackages.join(", ")}...`);
+  await pyodide.loadPackage("micropip");
+  pyodide.globals.set("extra_packages", pythonPackages);
+  try {
+    await pyodide.runPythonAsync(`
+import micropip
+extra_packages = globals()["extra_packages"]
+await micropip.install(extra_packages)
+`);
+  } finally {
+    pyodide.globals.delete("extra_packages");
+  }
+}
+
 export async function installBeancount(
-  pyodide: any,
+  pyodide: PyodideRuntime,
   options: InstallOptions = {},
 ): Promise<InstallResult> {
   if (!pyodide) {
@@ -144,6 +174,7 @@ export async function installBeancount(
     wheelBaseUrl,
     deps,
     inline = INLINE_DEFAULT,
+    pythonPackages,
     onStatus,
   } = options;
   const info = getWheelInfo(version);
@@ -154,6 +185,7 @@ export async function installBeancount(
     const wheelUrl = resolveWheelUrl({ version: info.version, wheelBaseUrl });
     onStatus?.(`Installing Beancount ${info.version} from URL...`);
     await installWheel(pyodide, wheelUrl, installDeps);
+    await installPythonPackages(pyodide, pythonPackages, onStatus);
     return { version: info.version, wheelUrl, source: "url" as const };
   };
 
@@ -163,6 +195,7 @@ export async function installBeancount(
     const filePath = writeInlineWheel(pyodide, info.filename, bytes);
     const wheelUrl = `emfs:${filePath}`;
     await installWheel(pyodide, wheelUrl, installDeps);
+    await installPythonPackages(pyodide, pythonPackages, onStatus);
     return {
       version: info.version,
       wheelUrl,
@@ -205,7 +238,10 @@ export async function createBeancountRuntime(
   return { pyodide, installResult, version: installResult.version };
 }
 
-export function createFileTree(pyodide: any, options: FileTreeOptions): FileTree {
+export function createFileTree(
+  pyodide: PyodideRuntime,
+  options: FileTreeOptions,
+): FileTree {
   if (!pyodide) {
     throw new Error("createFileTree: pyodide instance is required");
   }

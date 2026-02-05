@@ -1,4 +1,5 @@
 import { resolvePyodideBaseUrl } from "./urls.js";
+import type { PyodideRuntime } from "./pyodide-types.js";
 
 export async function loadPyodideFromBase(
   baseUrl?: string,
@@ -6,8 +7,9 @@ export async function loadPyodideFromBase(
 ) {
   const resolvedBase = resolvePyodideBaseUrl(baseUrl);
   status?.(`Loading Pyodide from ${resolvedBase}`);
-  const { loadPyodide } = await import(
+  type LoadPyodide = (options?: { indexURL?: string }) => Promise<PyodideRuntime>;
+  const { loadPyodide } = (await import(
     /* webpackIgnore: true */ `${resolvedBase}pyodide.mjs`
-  );
+  )) as unknown as { loadPyodide: LoadPyodide };
   return loadPyodide({ indexURL: resolvedBase });
 }

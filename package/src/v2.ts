@@ -3,6 +3,7 @@ import {
   installBeancount as install,
   type CreateRuntimeOptions,
   type InstallOptions,
+  type PyodideRuntime,
 } from "./runtime.js";
 
 export const VERSION = "v2";
@@ -10,8 +11,10 @@ export const VERSION = "v2";
 export type V2InstallOptions = Omit<InstallOptions, "version">;
 export type V2RuntimeOptions = Omit<CreateRuntimeOptions, "version">;
 
-export const installBeancount = (pyodide: any, options: V2InstallOptions = {}) =>
-  install(pyodide, { ...options, version: "v2" });
+export const installBeancount = (
+  pyodide: PyodideRuntime,
+  options: V2InstallOptions = {},
+) => install(pyodide, { ...options, version: "v2" });
 
 export const createBeancountRuntime = (options: V2RuntimeOptions = {}) =>
   createRuntime({ ...options, version: "v2" });
@@ -34,4 +37,5 @@ export type {
   InlineMode,
   InstallOptions,
   InstallResult,
+  PyodideRuntime,
 } from "./runtime.js";
