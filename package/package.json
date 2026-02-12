@@ -1,6 +1,6 @@
 {
   "name": "beancount-wasm",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Pyodide-compatible Beancount wheels (v2/v3) and a small installer wrapper",
   "type": "module",
   "license": "GPL-2.0-only",
