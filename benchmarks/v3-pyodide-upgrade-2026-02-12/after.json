@@ -1,0 +1,31 @@
+{
+  "pyodide_dist": "/Users/fengkx/me/code/beancount-wasm/.tmp/pyodide-v0.29.3-dist",
+  "wheel": "/Users/fengkx/me/code/beancount-wasm/package/wheels/v3/beancount-3.2.0-cp313-cp313-emscripten_4_0_9_wasm32.whl",
+  "input": "/Users/fengkx/me/code/beancount-wasm/deps/beancount-v3/examples/example.beancount",
+  "deps": true,
+  "warmup_runs": 3,
+  "measured_runs": 15,
+  "install_ms": 119.70337499999982,
+  "first_parse_ms": 381.564167,
+  "warm_parse_avg_ms": 163.14906953333332,
+  "warm_parse_p50_ms": 151.65483300000005,
+  "warm_parse_p95_ms": 223.88454200000024,
+  "warm_samples_ms": [
+    143.76137499999982,
+    134.82166700000016,
+    206.82299999999987,
+    142.61433399999987,
+    223.88454200000024,
+    197.1697919999997,
+    150.12995900000033,
+    155.03995799999984,
+    157.96387499999992,
+    151.65483300000005,
+    150.23183300000028,
+    189.75583300000017,
+    145.65354200000002,
+    136.86204199999975,
+    160.86945800000012
+  ],
+  "timestamp": "2026-02-12T07:21:57.919Z"
+}

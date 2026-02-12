@@ -47,3 +47,40 @@ The npm package lives in `package/`:
 pnpm run build:package
 pnpm -C package pack
 ```
+
+## Benchmark
+
+Runtime benchmark script:
+
+```sh
+node scripts/benchmark-pyodide-v3.mjs \
+  --pyodide-dist <pyodide-dist-dir> \
+  --wheel <wheel-path> \
+  --input <beancount-input-file> \
+  --deps \
+  --output <result-json>
+```
+
+Benchmark usage and options:
+- `scripts/README.md`
+
+Pinned v3 upgrade baseline (recorded on 2026-02-12):
+- `benchmarks/v3-pyodide-upgrade-2026-02-12/`
+
+For regression checks, prefer live A/B on the current machine:
+
+```sh
+node scripts/compare-pyodide-v3-live.mjs \
+  --before-pyodide-dist <before-pyodide-dist-dir> \
+  --before-wheel <before-wheel-path> \
+  --after-pyodide-dist <after-pyodide-dist-dir> \
+  --after-wheel <after-wheel-path> \
+  --input <beancount-input-file> \
+  --deps \
+  --out-dir <output-dir>
+```
+
+Note: `before/after` wheel must match the corresponding `pyodide-dist` version.
+
+Latest multi-run live benchmark snapshot:
+- `benchmarks/live-v3-2026-02-12/`

@@ -12,8 +12,8 @@ const { pyodide } = await createBeancountRuntime({
   version: "v3",
   // Optional: override the base URL for Pyodide assets.
   // The base URL must contain pyodide.mjs and follow the same layout as
-  // https://cdn.jsdelivr.net/pyodide/v0.25.1/full/
-  // pyodideBaseUrl: "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/",
+  // https://cdn.jsdelivr.net/pyodide/v0.29.3/full/
+  // pyodideBaseUrl: "https://cdn.jsdelivr.net/pyodide/v0.29.3/full/",
 });
 
 const result = await pyodide.runPythonAsync(`
