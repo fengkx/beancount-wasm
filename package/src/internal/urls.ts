@@ -4,7 +4,7 @@ const PACKAGE_VERSION = __BEANCOUNT_WASM_VERSION__;
 
 export const DEFAULT_WHEEL_BASE_URL = `https://cdn.jsdelivr.net/npm/beancount-wasm@${PACKAGE_VERSION}/`;
 export const DEFAULT_PYODIDE_BASE_URL =
-  "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/";
+  "https://cdn.jsdelivr.net/pyodide/v0.29.3/full/";
 
 function normalizeTrailingSlash(value: string) {
   return value.endsWith("/") ? value : `${value}/`;

@@ -8,11 +8,11 @@ const WHEELS: Record<
   { filename: string; deps: boolean }
 > = {
   v2: {
-    filename: "beancount-2.3.6-cp311-cp311-emscripten_3_1_46_wasm32.whl",
+    filename: "beancount-2.3.6-cp313-cp313-emscripten_4_0_9_wasm32.whl",
     deps: false,
   },
   v3: {
-    filename: "beancount-3.2.0-cp311-cp311-emscripten_3_1_46_wasm32.whl",
+    filename: "beancount-3.2.0-cp313-cp313-emscripten_4_0_9_wasm32.whl",
     deps: true,
   },
 };

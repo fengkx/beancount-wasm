@@ -31,7 +31,7 @@ EOF_DOCKER
 
   docker run --rm \
     -v "$out_dir":/out \
-    "$src_image" bash -lc "./tools/build_pyodide_wasm.sh && cp dist/*emscripten*_wasm32.whl /out/"
+    "$src_image" bash -c "./tools/build_pyodide_wasm.sh && cp dist/*emscripten*_wasm32.whl /out/"
 
   local wheel
   wheel=$(ls -1 "$out_dir"/*emscripten*_wasm32.whl | sort | tail -1)

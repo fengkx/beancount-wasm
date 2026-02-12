@@ -2,7 +2,7 @@ import { AsyncCall } from "async-call-rpc/base";
 import { WorkerChannel } from "async-call-rpc/utils/web/worker.js";
 import { createFileTree, installBeancount } from "beancount-wasm/runtime";
 
-const PYODIDE_VERSION = "v0.25.1";
+const PYODIDE_VERSION = "v0.29.3";
 const PYODIDE_BASE = `https://cdn.jsdelivr.net/pyodide/${PYODIDE_VERSION}/full/`;
 
 const pyodideByVersion = new Map();
