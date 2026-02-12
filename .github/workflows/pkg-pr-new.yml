@@ -36,6 +36,4 @@ jobs:
         run: pnpm -C package build
 
       - name: Publish preview to pkg.pr.new
-        uses: pkg-pr-new/publish@v1
-        with:
-          path: package
+        run: pnpm dlx pkg-pr-new publish ./package
