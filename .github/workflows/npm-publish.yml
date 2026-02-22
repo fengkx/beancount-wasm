@@ -58,7 +58,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          npm --prefix package version "${{ steps.versions.outputs.release_version }}" --no-git-tag-version
+          node -e "const fs=require('fs');const p='package/package.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));j.version='${{ steps.versions.outputs.release_version }}';fs.writeFileSync(p,JSON.stringify(j,null,2)+'\n');"
 
           ./scripts/build-wheels.sh --profile release v2 v3
           node ./scripts/sync-wheel-metadata.mjs --profile release
@@ -66,14 +66,12 @@ jobs:
 
           pnpm -C package build
           npm --prefix package publish --tag latest --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Build and publish debug-symbols (debug)
         run: |
           set -euo pipefail
 
-          npm --prefix package version "${{ steps.versions.outputs.debug_version }}" --no-git-tag-version
+          node -e "const fs=require('fs');const p='package/package.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));j.version='${{ steps.versions.outputs.debug_version }}';fs.writeFileSync(p,JSON.stringify(j,null,2)+'\n');"
 
           ./scripts/build-wheels.sh --profile debug-symbols v2 v3
           node ./scripts/sync-wheel-metadata.mjs --profile debug-symbols
@@ -81,5 +79,3 @@ jobs:
 
           pnpm -C package build
           npm --prefix package publish --tag debug --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
