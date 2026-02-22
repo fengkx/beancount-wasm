@@ -6,7 +6,11 @@ import { defineConfig } from "tsdown";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const packageJsonPath = path.join(__dirname, "package.json");
+const buildProfilePath = path.join(__dirname, "build-profile.json");
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+const buildProfile = JSON.parse(fs.readFileSync(buildProfilePath, "utf8"));
+const profile =
+  process.env.BEANCOUNT_WASM_PROFILE ?? buildProfile.profile ?? "release";
 
 export default defineConfig({
   platform: 'browser',
@@ -24,5 +28,6 @@ export default defineConfig({
   },
   define: {
     __BEANCOUNT_WASM_VERSION__: JSON.stringify(packageJson.version),
+    __BEANCOUNT_WASM_PROFILE__: JSON.stringify(profile),
   },
 });

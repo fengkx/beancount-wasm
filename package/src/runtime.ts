@@ -21,6 +21,8 @@ export {
   DEFAULT_PYODIDE_BASE_URL,
 };
 
+export const BUILD_PROFILE = __BEANCOUNT_WASM_PROFILE__;
+
 export type { BeancountVersion, BeancountVersionInput };
 
 export type InlineMode = "auto" | "prefer" | "only" | "off";

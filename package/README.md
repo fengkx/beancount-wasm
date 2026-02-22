@@ -83,6 +83,11 @@ Returns the URL used for the selected wheel.
 ### `getWheelInfo(version)`
 Returns `{ version, filename, deps }` for the selected Beancount version.
 
+### `BUILD_PROFILE`
+Compile-time profile embedded in the package build:
+- `"release"` for normal publish (`latest`)
+- `"debug-symbols"` for profiling publish (`debug`)
+
 ## Wheel assets
 
 The wheels live under `wheels/v2/` and `wheels/v3/` within the package. When
@@ -104,4 +109,17 @@ Version-specific entry example:
 import { createBeancountRuntime } from "beancount-wasm/v3";
 
 const { pyodide } = await createBeancountRuntime();
+```
+
+## npm dist-tags
+
+This package uses one package name with two dist-tags:
+- `latest`: release wheels + release inline wheels
+- `debug`: debug-symbol wheels + debug inline wheels
+
+Install examples:
+
+```sh
+npm i beancount-wasm@latest
+npm i beancount-wasm@debug
 ```

@@ -6,6 +6,11 @@
   "license": "GPL-2.0-only",
   "scripts": {
     "build": "tsdown",
+    "build:release": "pnpm run build",
+    "build:debug": "BEANCOUNT_WASM_PROFILE=debug-symbols pnpm run build",
+    "check:profile": "node ../scripts/verify-package-profile.mjs",
+    "pack:release": "pnpm run check:profile -- --expect release && pnpm pack",
+    "pack:debug": "pnpm run check:profile -- --expect debug-symbols && pnpm pack",
     "prepublishOnly": "pnpm build"
   },
   "exports": {

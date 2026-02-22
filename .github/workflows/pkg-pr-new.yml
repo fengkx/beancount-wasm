@@ -20,6 +20,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -32,8 +34,14 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      - name: Sync release wheel metadata
+        run: node ./scripts/sync-wheel-metadata.mjs --profile release
+
       - name: Build package
         run: pnpm -C package build
+
+      - name: Verify release profile
+        run: node ./scripts/verify-package-profile.mjs --expect release
 
       - name: Publish preview to pkg.pr.new
         run: pnpm dlx pkg-pr-new publish ./package

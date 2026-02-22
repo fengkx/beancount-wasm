@@ -1,5 +1,49 @@
 # Scripts
 
+## `build-wheels.sh`
+
+Build Beancount wheels for v2/v3 with selectable profile.
+
+### Usage
+
+```sh
+./scripts/build-wheels.sh [--profile release|debug-symbols] [v2] [v3]
+```
+
+Defaults:
+- profile: `release`
+- versions: `v2 v3`
+
+## `sync-wheel-metadata.mjs`
+
+Syncs package source metadata with wheel files currently present in
+`package/wheels/v2` and `package/wheels/v3`.
+
+### Usage
+
+```sh
+node scripts/sync-wheel-metadata.mjs --profile release
+node scripts/sync-wheel-metadata.mjs --profile debug-symbols
+```
+
+Updates:
+- `package/src/internal/wheels.ts`
+- `package/src/inline/v2.ts`
+- `package/src/inline/v3.ts`
+- `package/build-profile.json`
+
+## `verify-package-profile.mjs`
+
+Validates that package metadata, inline imports, and wheel sections match the
+expected profile.
+
+### Usage
+
+```sh
+node scripts/verify-package-profile.mjs --expect release
+node scripts/verify-package-profile.mjs --expect debug-symbols
+```
+
 ## `benchmark-pyodide-v3.mjs`
 
 Run a reproducible runtime benchmark for `beancount-v3` in Pyodide.

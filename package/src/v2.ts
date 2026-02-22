@@ -20,6 +20,7 @@ export const createBeancountRuntime = (options: V2RuntimeOptions = {}) =>
   createRuntime({ ...options, version: "v2" });
 
 export {
+  BUILD_PROFILE,
   createFileTree,
   DEFAULT_PYODIDE_BASE_URL,
   DEFAULT_WHEEL_BASE_URL,

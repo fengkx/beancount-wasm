@@ -8,7 +8,13 @@
   ],
   "scripts": {
     "install:all": "pnpm install",
+    "sync:wheels:release": "node scripts/sync-wheel-metadata.mjs --profile release",
+    "sync:wheels:debug": "node scripts/sync-wheel-metadata.mjs --profile debug-symbols",
+    "verify:release": "node scripts/verify-package-profile.mjs --expect release",
+    "verify:debug": "node scripts/verify-package-profile.mjs --expect debug-symbols",
     "build:package": "pnpm -C package build",
+    "build:package:release": "pnpm run sync:wheels:release && pnpm -C package build:release",
+    "build:package:debug": "pnpm run sync:wheels:debug && pnpm -C package build:debug",
     "build:demo": "pnpm -C demo build",
     "build:all": "pnpm -C package build && pnpm -C demo build",
     "dev:demo": "pnpm -C demo dev",

@@ -2,6 +2,40 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PROFILE="release"
+
+usage() {
+  cat <<EOF
+Usage: $(basename "$0") [--profile release|debug-symbols] [v2] [v3]
+EOF
+}
+
+parse_args() {
+  local positional=()
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --profile)
+        PROFILE="${2:-}"
+        shift 2
+        ;;
+      -h|--help)
+        usage
+        exit 0
+        ;;
+      *)
+        positional+=("$1")
+        shift
+        ;;
+    esac
+  done
+
+  if [[ "$PROFILE" != "release" && "$PROFILE" != "debug-symbols" ]]; then
+    echo "Invalid --profile: $PROFILE (expected release|debug-symbols)" >&2
+    exit 1
+  fi
+
+  versions=("${positional[@]}")
+}
 
 build_one() {
   local version="$1"
@@ -16,7 +50,7 @@ build_one() {
     exit 1
   fi
 
-  echo "==> Building wheel for ${version}"
+  echo "==> Building wheel for ${version} (profile=${PROFILE})"
   docker build -t "$image" -f "$subdir/Dockerfile" "$subdir"
 
   # Build a source-included image to avoid host bind-mount timestamp issues.
@@ -30,6 +64,7 @@ EOF_DOCKER
   rm -f "$out_dir"/*.whl
 
   docker run --rm \
+    -e "BEANCOUNT_WASM_PROFILE=${PROFILE}" \
     -v "$out_dir":/out \
     "$src_image" bash -c "./tools/build_pyodide_wasm.sh && cp dist/*emscripten*_wasm32.whl /out/"
 
@@ -40,10 +75,11 @@ EOF_DOCKER
     exit 1
   fi
 
-  echo "Copied $(basename "$wheel") -> $out_dir"
+  echo "Built $(basename "$wheel") -> $out_dir (profile=${PROFILE})"
 }
 
-versions=("$@")
+versions=()
+parse_args "$@"
 if [[ ${#versions[@]} -eq 0 ]]; then
   versions=("v2" "v3")
 fi
