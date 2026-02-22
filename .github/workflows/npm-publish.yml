@@ -65,7 +65,10 @@ jobs:
           node ./scripts/verify-package-profile.mjs --expect release
 
           pnpm -C package build
-          npm --prefix package publish --tag latest --provenance --access public
+          # OIDC trusted publishing (no long-lived token). Provenance is disabled
+          # because CI mutates package/package.json version based on the pushed tag,
+          # so the published tarball does not byte-match the tagged source tree.
+          npm --prefix package publish --tag latest --access public
         env:
           XBUILDENV_INSTALL_RETRIES: "6"
           XBUILDENV_RETRY_DELAY_SEC: "5"
@@ -81,7 +84,11 @@ jobs:
           node ./scripts/verify-package-profile.mjs --expect debug-symbols
 
           pnpm -C package build
-          npm --prefix package publish --tag debug --provenance --access public
+          # Keep OIDC auth. Provenance is disabled for the same reason as release:
+          # package/package.json is rewritten in CI to synthesize the publish
+          # version, and debug additionally publishes a different semver than the
+          # pushed git tag.
+          npm --prefix package publish --tag debug --access public
         env:
           XBUILDENV_INSTALL_RETRIES: "6"
           XBUILDENV_RETRY_DELAY_SEC: "5"
