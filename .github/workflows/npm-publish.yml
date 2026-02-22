@@ -66,6 +66,9 @@ jobs:
 
           pnpm -C package build
           npm --prefix package publish --tag latest --provenance --access public
+        env:
+          XBUILDENV_INSTALL_RETRIES: "6"
+          XBUILDENV_RETRY_DELAY_SEC: "5"
 
       - name: Build and publish debug-symbols (debug)
         run: |
@@ -79,3 +82,6 @@ jobs:
 
           pnpm -C package build
           npm --prefix package publish --tag debug --provenance --access public
+        env:
+          XBUILDENV_INSTALL_RETRIES: "6"
+          XBUILDENV_RETRY_DELAY_SEC: "5"
