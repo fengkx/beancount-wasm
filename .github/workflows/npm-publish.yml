@@ -4,28 +4,6 @@ on:
   push:
     tags:
       - "v*"
-  workflow_dispatch:
-    inputs:
-      profile:
-        description: "Build profile"
-        required: true
-        default: "release"
-        type: choice
-        options:
-          - release
-          - debug-symbols
-      npm_tag:
-        description: "npm dist-tag"
-        required: true
-        default: "latest"
-        type: choice
-        options:
-          - latest
-          - debug
-      version:
-        description: "Expected package version (optional)"
-        required: false
-        type: string
 
 permissions:
   contents: read
@@ -49,63 +27,59 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
-      - name: Resolve publish target
-        id: target
+      - name: Resolve versions from tag
+        id: versions
         run: |
           set -euo pipefail
 
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            PROFILE="${{ inputs.profile }}"
-            NPM_TAG="${{ inputs.npm_tag }}"
-            EXPECTED_VERSION="${{ inputs.version }}"
-          else
-            REF_NAME="${GITHUB_REF_NAME}"
-            if [[ "$REF_NAME" == *-debug.* ]]; then
-              PROFILE="debug-symbols"
-              NPM_TAG="debug"
-            else
-              PROFILE="release"
-              NPM_TAG="latest"
-            fi
-            EXPECTED_VERSION=""
-          fi
+          TAG_NAME="${GITHUB_REF_NAME}"
+          BASE_VERSION="${TAG_NAME#v}"
 
-          if [[ "$PROFILE" == "release" && "$NPM_TAG" != "latest" ]]; then
-            echo "Invalid combination: profile=release requires npm_tag=latest" >&2
-            exit 1
-          fi
-          if [[ "$PROFILE" == "debug-symbols" && "$NPM_TAG" != "debug" ]]; then
-            echo "Invalid combination: profile=debug-symbols requires npm_tag=debug" >&2
+          if [[ "$BASE_VERSION" == "$TAG_NAME" ]]; then
+            echo "Tag must start with 'v': $TAG_NAME" >&2
             exit 1
           fi
 
-          PACKAGE_VERSION="$(node -p "require('./package/package.json').version")"
-          if [[ -n "$EXPECTED_VERSION" && "$EXPECTED_VERSION" != "$PACKAGE_VERSION" ]]; then
-            echo "Version mismatch: expected=$EXPECTED_VERSION package=$PACKAGE_VERSION" >&2
+          if [[ ! "$BASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Tag must be vX.Y.Z (got: $TAG_NAME)" >&2
             exit 1
           fi
 
-          echo "profile=$PROFILE" >> "$GITHUB_OUTPUT"
-          echo "npm_tag=$NPM_TAG" >> "$GITHUB_OUTPUT"
-          echo "package_version=$PACKAGE_VERSION" >> "$GITHUB_OUTPUT"
+          RELEASE_VERSION="$BASE_VERSION"
+          DEBUG_VERSION="${BASE_VERSION}-debug"
+
+          echo "release_version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "debug_version=$DEBUG_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      - name: Build wheels
-        run: ./scripts/build-wheels.sh --profile "${{ steps.target.outputs.profile }}" v2 v3
+      - name: Build and publish release (latest)
+        run: |
+          set -euo pipefail
 
-      - name: Sync wheel metadata
-        run: node ./scripts/sync-wheel-metadata.mjs --profile "${{ steps.target.outputs.profile }}"
+          npm --prefix package version "${{ steps.versions.outputs.release_version }}" --no-git-tag-version
 
-      - name: Build package
-        run: pnpm -C package build
+          ./scripts/build-wheels.sh --profile release v2 v3
+          node ./scripts/sync-wheel-metadata.mjs --profile release
+          node ./scripts/verify-package-profile.mjs --expect release
 
-      - name: Verify package profile
-        run: node ./scripts/verify-package-profile.mjs --expect "${{ steps.target.outputs.profile }}"
+          pnpm -C package build
+          npm --prefix package publish --tag latest --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish
-        run: npm publish --tag "${{ steps.target.outputs.npm_tag }}" --provenance --access public
-        working-directory: package
+      - name: Build and publish debug-symbols (debug)
+        run: |
+          set -euo pipefail
+
+          npm --prefix package version "${{ steps.versions.outputs.debug_version }}" --no-git-tag-version
+
+          ./scripts/build-wheels.sh --profile debug-symbols v2 v3
+          node ./scripts/sync-wheel-metadata.mjs --profile debug-symbols
+          node ./scripts/verify-package-profile.mjs --expect debug-symbols
+
+          pnpm -C package build
+          npm --prefix package publish --tag debug --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
